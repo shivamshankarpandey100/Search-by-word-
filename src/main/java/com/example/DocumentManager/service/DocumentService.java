@@ -15,7 +15,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.*;
 
 @Service
 public class DocumentService {
@@ -23,12 +23,10 @@ public class DocumentService {
     private final DocumentRepository documentRepository;
     private final VisionService visionService;
     private final TextCleaner textCleaner;
-
     private final PdfTextExtractor pdfTextExtractor;
 
     @Value("${file.storage.location}")
     private String storageLocation;
-
 
     public DocumentService(DocumentRepository documentRepository,
                            VisionService visionService,
@@ -40,7 +38,6 @@ public class DocumentService {
     }
 
     public DocumentEntity uploadDocument(MultipartFile file) throws Exception {
-
         // 1. Save file to disk
         Path uploadDir = Paths.get(storageLocation);
         if (!Files.exists(uploadDir)) {
@@ -54,12 +51,12 @@ public class DocumentService {
 
         // 2. Extract text using Vision API
         String rawText;
-
         if (file.getContentType().equalsIgnoreCase("application/pdf")) {
             rawText = pdfTextExtractor.extractText(file);
         } else {
             rawText = visionService.extractText(file);
         }
+
         // 3. Clean text
         String cleaned = textCleaner.buildCleanedText(rawText);
 
@@ -74,15 +71,36 @@ public class DocumentService {
 
         return documentRepository.save(entity);
     }
+
     @Transactional(readOnly = true)
-    public List<DocumentEntity> searchInCleanedText(String keyword) {
-        if (keyword == null || keyword.isBlank()) {
-            return List.of();
+    public Map<String, Object> searchInCleanedText(String query) {
+        Map<String, Object> result = new LinkedHashMap<>();
+
+        if (query == null || query.isBlank()) {
+            result.put("error", "Query is empty");
+            return result;
         }
-        return documentRepository.searchByTsvector(keyword.toLowerCase());
+
+        query = query.trim();
+
+        // 1️⃣ Phrase Search (exact phrase in quotes)
+        if (query.startsWith("\"") && query.endsWith("\"")) {
+            String phrase = query.substring(1, query.length() - 1);
+            List<DocumentEntity> phraseResults = documentRepository.phraseSearch(phrase);
+            result.put("search_type", "phrase_search");
+            result.put("query", phrase);
+            result.put("results", phraseResults);
+            return result;
+        }
+
+        // 2️⃣ Regular search (your existing functionality)
+        List<DocumentEntity> regularResults = documentRepository.searchByKeywordInLO(query.toLowerCase());
+        result.put("search_type", "regular_search");
+        result.put("query", query);
+        result.put("results", regularResults);
+
+        return result;
     }
-
-
 
     public List<DocumentEntity> search(String query) {
         if (query == null || query.isBlank()) {
