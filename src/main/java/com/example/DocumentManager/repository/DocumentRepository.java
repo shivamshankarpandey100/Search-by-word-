@@ -14,10 +14,10 @@ public interface DocumentRepository extends JpaRepository<DocumentEntity, Long> 
             nativeQuery = true)
     List<DocumentEntity> searchByKeyword(@Param("keyword") String keyword);
 
-    @Query(value = """
-        SELECT d.* FROM documents d
-        WHERE convert_from(lo_get(d.cleaned_text), 'UTF8') ILIKE concat('%', :keyword, '%')
-        """, nativeQuery = true)
-    List<DocumentEntity> searchByKeywordInLO(@Param("keyword") String keyword);
+    @Query(value = "SELECT * FROM documents " +
+            "WHERE search_vector @@ plainto_tsquery('english', :keyword)",
+            nativeQuery = true)
+    List<DocumentEntity> searchByTsvector(@Param("keyword") String keyword);
+
 
 }
