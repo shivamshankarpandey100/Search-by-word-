@@ -79,7 +79,7 @@ public class DocumentService {
         if (keyword == null || keyword.isBlank()) {
             return List.of();
         }
-        return documentRepository.searchByKeywordInLO(keyword.toLowerCase());
+        return documentRepository.searchByTsvector(keyword.toLowerCase());
     }
 
 

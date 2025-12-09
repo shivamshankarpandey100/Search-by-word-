@@ -3,11 +3,14 @@ package com.example.DocumentManager.controller;
 import com.example.DocumentManager.dto.DocumentSearchDto;
 import com.example.DocumentManager.entity.DocumentEntity;
 import com.example.DocumentManager.service.DocumentService;
+import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -54,7 +57,7 @@ public class DocumentController {
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION,
-                        "attachment; filename=\"" + doc.getFileName() + "\"")
+                        "inline; filename=\"" + doc.getFileName() + "\"")
                 .contentType(MediaType.parseMediaType(doc.getContentType()))
                 .body(bytes);
     }
@@ -96,4 +99,7 @@ public class DocumentController {
         return ResponseEntity.ok(result);
     }
 
-}
+    }
+
+
+
