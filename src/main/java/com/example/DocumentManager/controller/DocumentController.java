@@ -15,6 +15,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/documents")
@@ -84,9 +85,17 @@ public class DocumentController {
 
     @GetMapping("/search/meta")
     public ResponseEntity<List<DocumentSearchDto>> searchMeta(@RequestParam("q") String query) {
+        Map<String, Object> searchResults = documentService.searchInCleanedText(query);
 
-        List<DocumentEntity> docs = documentService.searchInCleanedText(query);
+        // If there's an error (empty query), return bad request
+        if (searchResults.containsKey("error")) {
+            return ResponseEntity.badRequest().build();
+        }
 
+        // Extract results from the map
+        List<DocumentEntity> docs = (List<DocumentEntity>) searchResults.get("results");
+
+        // Convert to DTO
         List<DocumentSearchDto> result = docs.stream()
                 .map(d -> new DocumentSearchDto(
                         d.getId(),
@@ -98,8 +107,4 @@ public class DocumentController {
 
         return ResponseEntity.ok(result);
     }
-
-    }
-
-
-
+}
