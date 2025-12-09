@@ -94,7 +94,7 @@ public class DocumentService {
         }
 
         // 2️⃣ Regular search (your existing functionality)
-        List<DocumentEntity> regularResults = documentRepository.searchByKeywordInLO(query.toLowerCase());
+        List<DocumentEntity> regularResults = documentRepository.searchByTsvector(query.toLowerCase());
         result.put("search_type", "regular_search");
         result.put("query", query);
         result.put("results", regularResults);
