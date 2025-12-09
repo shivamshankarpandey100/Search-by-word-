@@ -113,4 +113,6 @@ public class DocumentService {
         return documentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Document not found: " + id));
     }
+
+
 }
